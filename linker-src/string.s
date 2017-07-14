@@ -32,12 +32,14 @@ strlen:
 	sw $ra, 0($sp)
 	
 	addu $t0, $0, $0			#counter = 0
-	beq $a0, $0, strlenexit 		#if $a0 null exit
+	lb $t1, 0($a0)		
+	beq $t1, $0, strlenexit 		#if $t1 null exit
 	
 	strlenloop: 
+	lb $t1, 1($a0)
 	addiu $a0, $a0, 1			#a0 = pointer to next char
 	addiu $t0, $t0, 1			#counter +1
-	bne $a0, $0, strlenloop			#loop
+	bne $t1, $0, strlenloop			#loop
 	
 	strlenexit:
 	addu $v0, $t0, $0			#return $v0 = counter 
@@ -62,16 +64,19 @@ strncpy:
 	sw $ra, 0($sp)
 	move $v0, $a0  			#$v0 = destination array $a0 -> $v0
 	beq $a1, $0, strncpyexit 	#if src str null
+	lb $t0, 0($a1)
+	beq $t0, 0 strncpyexit
 	
 	strncpyloop:
 	lb $t1, 0($a1) 			#t1 = char to copy 
-	sb $a0, 0($t1)			#put next src char in dest
+	sb $t1, 0($a0)			#put next src char in dest
 	addiu $a0, $a0, 1		#a0 = pointer to next dest char
 	addiu $a1, $a1, 1		#a1 = pointer to next src char
 	
 	addiu $a2, $a2, -1 		#counter -1
-	beq $a0, $0 strncpyexit 	#number of characters to copy > str length
+	beq $t1, $0 strncpyexit 	#number of characters to copy > str length
 	beq $a2, $0 strncpyexit 	#copied  the $a2 number of characters
+	j strncpyloop
 	
 	strncpyexit:		
 	
