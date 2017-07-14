@@ -30,15 +30,20 @@ strlen:
 	# YOUR CODE HERE
 	addiu $sp, $sp, -4
 	sw $ra, 0($sp)
+	
 	addu $t0, $0, $0			#counter = 0
 	beq $a0, $0, strlenexit 		#if $a0 null exit
+	
 	strlenloop: 
 	addiu $a0, $a0, 1			#a0 = pointer to next char
 	addiu $t0, $t0, 1			#counter +1
 	bne $a0, $0, strlenloop			#loop
+	
 	strlenexit:
 	addu $v0, $t0, $0			#return $v0 = counter 
 	
+	lw $ra 0($sp)
+	addiu $sp $sp 4
 	jr $ra
 
 #------------------------------------------------------------------------------
@@ -57,6 +62,7 @@ strncpy:
 	sw $ra, 0($sp)
 	move $v0, $a0  			#$v0 = destination array $a0 -> $v0
 	beq $a1, $0, strncpyexit 	#if src str null
+	
 	strncpyloop:
 	lb $t1, 0($a1) 			#t1 = char to copy 
 	sb $a0, 0($t1)			#put next src char in dest
@@ -67,9 +73,10 @@ strncpy:
 	beq $a0, $0 strncpyexit 	#number of characters to copy > str length
 	beq $a2, $0 strncpyexit 	#copied  the $a2 number of characters
 	
-	strncpyexit:
+	strncpyexit:		
 	
-	
+	sw $ra, 0($sp)
+	addiu $sp, $sp, 4
 	jr $ra
 
 #------------------------------------------------------------------------------
@@ -86,17 +93,30 @@ strncpy:
 #------------------------------------------------------------------------------
 copy_of_str:
 	# YOUR CODE HERE
+	addiu $sp $sp -16
+	sw $ra 0($sp)
+	sw $a0 4($sp)			#store string 4(sp)
+
 	
-	jal strlen			#a0 = str input fo strlen
-	move $a2, $v0			#a2 = num char to copy for strncpy
-	sw $
-					#v0 = num bytes for syscall 9 to allocate
-					#a0 should = num bytes if syscall 
-	syscall 9			#v0 now contains address of allocated mem
-	move $a0, $v0			#a0 = dest array for strncpy
-					#a1 = source string
-					
+	jal strlen
+	sw $v0 8($sp)			#store length of string 8(sp)
+	
+	
+	lw $a0 8($sp)			#syscall9: a0 = num bytes to copy
+	li $v0 9										
+	syscall			        #v0 now contains address of allocated mem
+	sw $v0 12($sp)			#store allocated mem  address12(sp)
+			
+				
+	lw $a1 4($sp)	
+	lw $a2 8($sp)	
+	lw $a0 12($sp)	
+			
 	jal strncpy
+	
+	
+	lw $ra 0($sp)
+	addiu $sp $sp 16
 	jr $ra
 
 ###############################################################################
