@@ -49,7 +49,85 @@
 #------------------------------------------------------------------------------
 addr_for_symbol:
 	# YOUR CODE HERE
+	addiu $sp $sp -20
+	sw $ra 0($sp)
+	sw $a0 4($sp)
+	sw $a1 8($sp)
+	
+	addiu $t1 $0 -1 #t1 is the return value
+	
+	loop:
+	beq $a0 $0 exit
+	lw $t0 0($a0) #the pointer to the current symbol
+	lw $a0 4($a0) #name of the symbol
+	
+	sw $t0 12($sp)
+	sw $t1 16($sp)
+	jal compare_str #v0 now contains 1 if a match is found
+	lw $t0 12($sp)
+	lw $t1 16($sp)
+	
+	addiu $t1 $t0 8 #let t1 = the value of the symbol
+	bne $v0 $0 exit
+	
+	addiu $a0 $a0 12 # increment to next symbol
+	j loop
+	
+	sw $ra 0($sp)
+	lw $a0 4($sp)
+	lw $a1 8($sp)
+	
+	exit:
+	addu $v0 $0 $t1
+	addiu $sp $sp 20
 	jr $ra
+	
+#a0 = arr1
+#a1 = arr2
+#return 0 if not the same, 1 otherwise
+compare_str:
+	addiu $sp $sp -12
+	sw $a0 0($sp)
+	sw $a1 4($sp)
+	sw $ra 8($sp)
+	
+	jal strlen
+	move $t0, $v0		#t0 = len arr1
+	
+	move $a0, $a1 
+	jal strlen
+	move $t1, $v0		#t1 = len arr2 
+	
+	addiu $v0 $0 0
+	bne $t1 $t2 comp_strexit		#different lengths -> return 0
+	move $t4 $t1			#t4 = LENGTH OF ARRS
+	addiu $t3 $0 0			#t3 count = 0
+	  
+	lw $a0 0($sp)			#a0 = arr1
+	lw $a1 4($sp)			#a1 = arr2
+	
+	comp_strloop:
+	lb $t0 0($a0)			#cur char arr1
+	lb $t1 0($a1)			#cur char arr2
+	
+	bne $t0 $t1 comp_strexit			#different chars -> return 0
+	
+	addiu $a0 $a0 1
+	addiu $a1 $a1 1
+	addiu $t3 $t3 1
+	
+	beq $t3 $t4 comp_strGOOD
+	
+	jal comp_strloop
+	
+	comp_strGOOD:
+	addiu $v0 $0 1
+	
+	comp_strexit:
+	addiu $sp $sp 12
+	jr $ra
+	
+		
 	
 ###############################################################################
 #                 DO NOT MODIFY ANYTHING BELOW THIS POINT                       
