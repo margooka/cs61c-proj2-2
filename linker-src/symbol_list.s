@@ -48,84 +48,44 @@
 # Returns:  address of symbol if found or -1 if not found
 #------------------------------------------------------------------------------
 addr_for_symbol:
-	# YOUR CODE HERE
-	addiu $sp $sp -20
-	sw $ra 0($sp)
-	sw $a0 4($sp)
-	sw $a1 8($sp)
 	
-	addiu $t1 $0 -1 #t1 is the return value
+	addiu $sp $sp -4 # prologue
+	sw $ra 0($sp)	
+	
+	addiu $v0 $0 -1 #initialize return value
 	
 	loop:
-	beq $a0 $0 exit
-	lw $t0 0($a0) #the pointer to the current symbol
-	lw $a0 4($a0) #name of the symbol
+	beq $a0 $0 exit # if null, list is empty so exit
+	beq $a1 $0 exit # if name to look for is null, exit
+	lw $t1 0($a0) 	# addr of the symbol
+	lw $t2 4($a0)   # t2 has name of the symbol
+	move $t3 $a1   	# t3 has copy of name of symbol to look for
 	
-	sw $t0 12($sp)
-	sw $t1 16($sp)
-	jal compare_str #v0 now contains 1 if a match is found
-	lw $t0 12($sp)
-	lw $t1 16($sp)
+	str_loop:
+		lb $t5 0($t2) 			# t5 is current char in our symbol name
+		lb $t6 0($t3) 			# t6 is current char in symbol name to look for
+		beq $t5 $0 check_null
+		bne $t5 $t6 str_exit_nope
+		addiu $t2 $t2 1 		#increment both name addresses
+		addiu $t3 $t3 1
+		j str_loop
 	
-	addiu $t1 $t0 8 #let t1 = the value of the symbol
-	bne $v0 $0 exit
+	check_null: 				# strings match if both cur chars are null
+		beq $t6 $0 str_exit_yep
+		j str_exit_nope		
 	
-	addiu $a0 $a0 12 # increment to next symbol
-	j loop
+	str_exit_nope:			# no match
+		lw $a0 8($a0) 		# load next node
+		j loop
 	
-	sw $ra 0($sp)
-	lw $a0 4($sp)
-	lw $a1 8($sp)
+	str_exit_yep:			# names match!! yay
+		move $v0 $t1
+		j exit
 	
 	exit:
-	addu $v0 $0 $t1
-	addiu $sp $sp 20
-	jr $ra
-	
-#a0 = arr1
-#a1 = arr2
-#return 0 if not the same, 1 otherwise
-compare_str:
-	addiu $sp $sp -12
-	sw $a0 0($sp)
-	sw $a1 4($sp)
-	sw $ra 8($sp)
-	
-	jal strlen
-	move $t0, $v0		#t0 = len arr1
-	
-	move $a0, $a1 
-	jal strlen
-	move $t1, $v0		#t1 = len arr2 
-	
-	addiu $v0 $0 0
-	bne $t1 $t2 comp_strexit		#different lengths -> return 0
-	move $t4 $t1			#t4 = LENGTH OF ARRS
-	addiu $t3 $0 0			#t3 count = 0
-	  
-	lw $a0 0($sp)			#a0 = arr1
-	lw $a1 4($sp)			#a1 = arr2
-	
-	comp_strloop:
-	lb $t0 0($a0)			#cur char arr1
-	lb $t1 0($a1)			#cur char arr2
-	
-	bne $t0 $t1 comp_strexit			#different chars -> return 0
-	
-	addiu $a0 $a0 1
-	addiu $a1 $a1 1
-	addiu $t3 $t3 1
-	
-	beq $t3 $t4 comp_strGOOD
-	
-	jal comp_strloop
-	
-	comp_strGOOD:
-	addiu $v0 $0 1
-	
-	comp_strexit:
-	addiu $sp $sp 12
-	jr $ra
+		lw $ra 0($sp)		#epilogue
+		addiu $sp $sp 4	
+		jr $ra	
 	
 		
 	
