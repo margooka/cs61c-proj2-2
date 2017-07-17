@@ -46,7 +46,21 @@ relocLabel: .asciiz ".relocation"
 # Returns: 1 if the instruction needs relocation, 0 otherwise.
 #------------------------------------------------------------------------------
 inst_needs_relocation:
-	# YOUR CODE HERE
+
+	addiu $sp $sp -4
+	sw $ra 0($sp)
+	
+	srl $t0 $a0 26		# t0 now has opcode
+	li $t1 2		# opcode of j
+	li $t2 3		# opcode of jal
+	
+	addiu $v0 $0 1
+	beq $t0 $t1 exit_inst_needs_relocation
+	beq $t0 $t2 exit_inst_needs_relocation
+	addiu $v0 $0 0		# otherwise, no relocation
+exit_inst_needs_relocation:	
+	lw $ra 0($sp)
+	addiu $sp $sp 4
 	jr $ra
 	
 #------------------------------------------------------------------------------
@@ -68,7 +82,42 @@ inst_needs_relocation:
 # Returns: the relocated instruction, or -1 if error
 #------------------------------------------------------------------------------
 relocate_inst:
-	# YOUR CODE HERE
+	
+	addiu $sp $sp -8
+	sw $a0 0($sp)
+	sw $ra 4($sp)
+	
+	
+	move $a0 $a3 		# a0 has the relocation table
+	move $a1 $a1 		# a1 has the byte offset
+	jal symbol_for_addr
+	move $t0 $v0 		# t0 has the name of the label
+	beq $t0 $0 exit_error
+	
+	move $a0 $a2 		# a0 has the symbol table
+	move $a1 $t0		# a1 has the label name
+	jal addr_for_symbol
+	move $t1 $v0 		# t1 has the absolute address of the label
+	li $t2 -1
+	beq $t1 $t2 exit_error
+	
+	lw $a0 0($sp)
+	sll $t1 $t1 4
+	srl $t1 $t1 6 		# now t1 = jumpaddr
+	andi $a0 $a0 0xfc000000 # a0 now has the opcode
+	addu $a0 $a0 $t1	# a0 has the relocated instruction
+	addiu $v0 $a0 0
+	j exit_relocate_inst
+	
+	
+	
+exit_error:
+	addiu $v0 $0 -1
+	
+exit_relocate_inst:	
+	
+	lw $ra 4($sp)
+	addiu $sp $sp 8
 	jr $ra
 
 ###############################################################################
