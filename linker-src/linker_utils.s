@@ -83,9 +83,12 @@ exit_inst_needs_relocation:
 #------------------------------------------------------------------------------
 relocate_inst:
 	
-	addiu $sp $sp -8
+	addiu $sp $sp -20
 	sw $a0 0($sp)
 	sw $ra 4($sp)
+	sw $a1, 8($sp)
+	sw $a2, 12($sp)
+	sw $a3, 16($sp)
 	
 	
 	move $a0 $a3 		# a0 has the relocation table
@@ -116,8 +119,12 @@ exit_error:
 	
 exit_relocate_inst:	
 	
+	lw $a0 0($sp)
 	lw $ra 4($sp)
-	addiu $sp $sp 8
+	lw $a1, 8($sp)
+	lw $a2, 12($sp)
+	lw $a3, 16($sp)
+	addiu $sp $sp 20
 	jr $ra
 
 ###############################################################################

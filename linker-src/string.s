@@ -27,11 +27,11 @@ tab:	.asciiz "\t"
 # Returns: the length of the string
 #------------------------------------------------------------------------------
 strlen:
-	# YOUR CODE HERE
 	addiu $sp, $sp, -4
 	sw $ra, 0($sp)
 	
 	addu $t0, $0, $0			#counter = 0
+	beq $a0 $0 strlenexit
 	lb $t1, 0($a0)		
 	beq $t1, $0, strlenexit 		#if $t1 null exit
 	
